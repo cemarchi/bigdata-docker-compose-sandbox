@@ -4,6 +4,10 @@ This repository contains a complete and configured environment for developing an
 
 # Included Tools:
 
+MinIO: Is a high-performance, open-source object storage system compatible with the S3 API, designed for scalability and cloud-native applications.
+MLflow: Is an open-source platform for managing the machine learning lifecycle, including experimentation, reproducibility, deployment, and model registry.
+pgAdmin: Is an open-source, web-based management tool for PostgreSQL that provides a user-friendly interface for database administration and querying.
+PostgreSQL: Is a powerful, open-source relational database management system known for its extensibility, robustness, and SQL compliance.
 Spark: Fast processing engine for large-scale data, integrated with Hadoop.
 
 # Prerequisites
@@ -26,22 +30,34 @@ Docker Compose configured.
 3. Run Docker Compose:
 
     ```bash
-    docker compose up
+    docker-compose --env-file config.env up --build
 
     # or background
     
-    docker compose up -d
+    docker-compose --env-file config.env up -d --build
     ```
 
 4. Stop the containers when you're done:
 
     ```bash
-    docker compose down
+    docker-compose down
     ```
 
 Docker Compose will automatically set up all necessary containers and provide access to services via mapped local ports. For example:
 
+MinIO UI: http://localhost:9001/
+MLflow UI: http://localhost:5000/
+PGAdmin UI: http://localhost:8090/
 Spark UI: http://localhost:8080
+
+Spark Jars:
+
+delta-contribs_2.13-4.0.0rc1.jar
+delta-hudi_2.13-3.3.0.jar
+delta-iceberg_2.13-3.3.0.jar
+delta-spark_2.13-4.0.0rc1.jar
+delta-storage-4.0.0rc1.jar
+delta-storage-s3-dynamodb-4.0.0rc1.jar
 
 # Contributions
 Contributions are welcome! Feel free to open a pull request with improvements, new tools, or adjustments.
