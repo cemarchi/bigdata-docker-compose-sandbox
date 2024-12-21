@@ -178,7 +178,7 @@ services:
   s3:
     restart: always
     image: minio/minio:RELEASE.2024-11-07T00-52-20Z.fips
-    container_name: minio
+    container_name: s3
     volumes:
       - minio-data:/data
     ports:
