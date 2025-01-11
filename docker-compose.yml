@@ -1,186 +1,88 @@
-services:
-  # SPARK
-  # MASTER
-  spark-master:
-    build: ./spark    
-    container_name: spark-master    
-    ports:
-      - "${SPARK_UI_PORT}:8080"  # SPARK UI Port
-      - "${SPARK_MASTER_PORT}:7077" # SPARK MASTER Port
-    environment:
-      - SPARK_MODE=master      
-      - SPARK_MASTER_PORT=${SPARK_MASTER_PORT}      
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no  
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
-    networks:
-      - spark-network
-      - backend
-      - postgres
-
-  # NODE - include as many Spark workers as you want by simply changing the container name 
-  spark-worker-1:
-    image: bitnami/spark:3.5.3
-    container_name: spark-worker-1
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:${SPARK_MASTER_PORT}
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g    
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no
-    networks:
-      - spark-network
-      - backend
-      - postgres
-
-  spark-worker-2:
-    image: bitnami/spark:3.5.3
-    container_name: spark-worker-2
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:${SPARK_MASTER_PORT}
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g 
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no 
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no  
-    networks:
-      - spark-network
-      - backend
-      - postgres
-
-  spark-worker-3:
-    image: bitnami/spark:3.5.3
-    container_name: spark-worker-3
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:${SPARK_MASTER_PORT}
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no  
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no 
-    networks:
-      - spark-network
-      - backend
-      - postgres
-
-  spark-worker-4:
-    image: bitnami/spark:3.5.3
-    container_name: spark-worker-4
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MODE=worker
-      - SPARK_MASTER_URL=spark://spark-master:${SPARK_MASTER_PORT}
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g 
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no  
-    networks:
-      - spark-network
-      - backend
-      - postgres
-
-  spark-worker-5:
-    image: bitnami/spark:3.5.3
-    container_name: spark-worker-5
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MODE=worker      
-      - SPARK_MASTER_URL=spark://spark-master:${SPARK_MASTER_PORT}
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g 
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no   
-    networks:
-      - spark-network
-      - backend
-      - postgres
-
-  spark-worker-6:
-    image: bitnami/spark:3.5.3
-    container_name: spark-worker-6
-    depends_on:
-      - spark-master
-    environment:
-      - SPARK_MODE=worker      
-      - SPARK_MASTER_URL=spark://spark-master:${SPARK_MASTER_PORT}
-      - SPARK_WORKER_CORES=2
-      - SPARK_WORKER_MEMORY=2g 
-      - SPARK_RPC_AUTHENTICATION_ENABLED=no
-      - SPARK_RPC_ENCRYPTION_ENABLED=no 
-      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
-      - SPARK_SSL_ENABLED=no 
-    networks:
-      - spark-network
-      - backend
-      - postgres
+services:  
 
   # POSTGRESQL
   postgresdb:
-      restart: always
-      image: postgres:14.15-alpine
-      container_name: postgres_db
-      ports:
-        - "${PG_PORT}:5432"
-      networks:
-        - backend
-        - postgres
-      environment:
-        - POSTGRES_USER=${PG_USER}
-        - POSTGRES_PASSWORD=${PG_PASSWORD}
-        - POSTGRES_DATABASE=${PG_DATABASE}
-      volumes:
-        - postgres-data:/var/lib/postgresql/data/
-      healthcheck:
-        test: ["CMD", "pg_isready", "-p", "${PG_PORT}", "-U", "${PG_USER}"]
-        interval: 5s
-        timeout: 5s
-        retries: 3
+    restart: always
+    image: postgres:17.2-alpine3.21
+    container_name: postgres_db
+    ports:
+      - "${POSTGRES_PORT}:5432"
+    networks:
+      - backend
+      - postgres
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_MULTIPLE_DATABASES=${PREFECT_POSTGRES_DATABASE},${MLFLOW_POSTGRES_DATABASE}
+    volumes:
+      - E:\docker\volume\postgresql\data:/var/lib/postgresql/data/
+      - E:\docker\volume\postgresql\bash:/docker-entrypoint-initdb.d/
+    healthcheck:
+      test: ["CMD", "pg_isready", "-p", "${POSTGRES_PORT}", "-U", "${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
 
   # PGADMIN
   pgadmin:
-      image: dpage/pgadmin4:8.14.0
-      container_name: pgadmin
-      restart: always
-      depends_on:
-        - postgresdb
-      networks:
-        - postgres
-      environment:
-        - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
-        - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
-        - PGADMIN_CONFIG_SERVER_MODE=False
-      ports:
-        - "${PGADMIN_PORT}:80"
-      volumes:
-        - pgadmin-data:/var/lib/pgadmin
+    image: dpage/pgadmin4:8.14.0
+    container_name: pgadmin
+    restart: always
+    depends_on:
+      - postgresdb
+    networks:
+      - postgres
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=${PGADMIN_DEFAULT_EMAIL}
+      - PGADMIN_DEFAULT_PASSWORD=${PGADMIN_DEFAULT_PASSWORD}
+      - PGADMIN_CONFIG_SERVER_MODE=False
+    ports:
+      - "${PGADMIN_PORT}:80"
+    volumes:
+      - E:\docker\volume\pgadmin\data:/var/lib/pgadmin
 
-  # MinIO
+  # PREFECT SERVER API AND UI 
+  prefect-server:
+    image: prefecthq/prefect:3.1.12.dev4-python3.12
+    restart: always
+    depends_on:
+      - postgresdb
+    networks:
+      - postgres
+      - prefect
+      - ballista
+    volumes:      
+      - E:\docker\volume\prefect\data:/root/.prefect
+    command: prefect server start --host 0.0.0.0
+    environment:
+      - PREFECT_SERVER_ANALYTICS_ENABLED=False
+      - PREFECT_LOGGING_SERVER_LEVEL=WARNING      
+      - PREFECT_API_DATABASE_CONNECTION_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresdb:${POSTGRES_PORT}/${PREFECT_POSTGRES_DATABASE}
+      - PREFECT_API_DATABASE_MIGRATE_ON_START=True
+    ports:
+      - "${PREFECT_PORT}:4200"
+
+  prefect-worker:
+    image: prefecthq/prefect:3.1.12.dev4-python3.12
+    working_dir: /app
+    command: python -m task
+    networks:
+      - prefect
+      - ballista
+    volumes:
+      - E:\docker\volume\prefect\data:/app
+    environment:
+      - PREFECT_API_URL=http://prefect-server:${PREFECT_PORT}/api
+      - PREFECT_LOGGING_LEVEL=DEBUG
+    profiles: ["worker"]
+  
+  # MINIO
   s3:
     restart: always
     image: minio/minio:RELEASE.2024-11-07T00-52-20Z.fips
     container_name: s3
     volumes:
-      - minio-data:/data
+      - E:\docker\volume\minio\data:/data
     ports:
       - "${MINIO_PORT}:9000"
       - "${MINIO_CONSOLE_PORT}:9001"
@@ -241,7 +143,7 @@ services:
       - MLFLOW_S3_IGNORE_TLS=true
     command: >
       mlflow server
-      --backend-store-uri postgresql://${PG_USER}:${PG_PASSWORD}@postgresdb:${PG_PORT}/${PG_DATABASE}
+      --backend-store-uri postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgresdb:${POSTGRES_PORT}/${MLFLOW_POSTGRES_DATABASE}
       --host 0.0.0.0
       --serve-artifacts
       --artifacts-destination s3://${MLFLOW_BUCKET_NAME}
@@ -251,13 +153,83 @@ services:
       timeout: 10s
       retries: 3
 
-networks:
-  spark-network:  
-  frontend:
-  backend:
-  postgres:
+  # ETCD
+  etcd:
+    image: quay.io/coreos/etcd:v3.4.9
+    restart: always
+    command: "etcd -advertise-client-urls http://etcd:2379 -listen-client-urls http://0.0.0.0:2379"
+    ports:
+      - "2379:2379"
+    networks:
+      - ballista
 
-volumes:
-  postgres-data:
-  pgadmin-data:
-  minio-data:
+  # BALLISTA SCHEDULER    
+  ballista-scheduler:
+    image: ghcr.io/apache/arrow-ballista-standalone:0.12.0-rc4
+    container_name: ballista-scheduler  
+    restart: always
+    environment:
+      - RUST_LOG=info
+    command: "--cluster-backend etcd --etcd-urls etcd:2379 --bind-host 0.0.0.0"
+    ports:
+      - "50050:50050"   
+    volumes:
+      - E:\docker\volume\ballista\data:/data
+    depends_on:
+      - etcd
+    networks:
+      - ballista
+      - backend
+    healthcheck:
+      test: ["CMD", "nc", "-z", "ballista-scheduler", "50050"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  # BALLISTA EXECUTOR
+  ballista-executor:
+    image: ghcr.io/apache/arrow-ballista-standalone:0.12.0-rc4
+    restart: always
+    depends_on:
+      - ballista-scheduler
+    command: "--bind-host 0.0.0.0 --scheduler-host ballista-scheduler --scheduler-connect-timeout-seconds 15"
+    deploy:
+      replicas: 2   
+    environment:
+      - RUST_LOG=ballista=info
+    volumes:
+      - E:\docker\volume\ballista\benchmarks\data:/data    
+    healthcheck:
+      test: ["CMD", "nc", "-z", "ballista-executor", "50051"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ballista
+      - backend
+
+  # BALLISTA CLIENT
+  ballista-client:
+    image: ghcr.io/apache/arrow-ballista-standalone:0.12.0-rc4    
+    command: ["/bin/bash", "-c", "sleep infinity"]
+    ports:
+      - "50051:50051"
+    environment:
+      - RUST_LOG=info
+    volumes:
+      - E:\docker\volume\ballista\benchmarks\data:/data
+    depends_on:
+      - ballista-scheduler
+      - ballista-executor
+
+networks:
+  frontend:
+    driver: bridge
+  backend:
+    driver: bridge
+  postgres:
+    driver: bridge
+  prefect:
+    driver: bridge
+  ballista:
+    driver: bridge
